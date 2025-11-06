@@ -39,53 +39,26 @@
 
 
 
-<!-- Import Map para permitir que o DuckDB encontre o Apache Arrow -->
-<script type="importmap">
-{
-  "imports": {
-    "apache-arrow": "https://cdn.jsdelivr.net/npm/apache-arrow@12.0.1/+esm"
-  }
-}
-</script>
-
 <script type="module">
-import * as arrow from "https://cdn.jsdelivr.net/npm/apache-arrow@12.0.1/+esm";
-import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser.mjs";
+  import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser.mjs";
 
-globalThis.Arrow = arrow; // Torna Arrow disponível globalmente
+  // Seleciona o build MVP compatível com browsers
+  const bundle = duckdb.selectBundle({
+    mvp: {
+      mainModule: "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-mvp.wasm",
+      mainWorker: "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser-mvp.worker.js",
+    }
+  });
 
-window.__duck_ready = (async () => {
-  try {
-    // Seleciona o bundle correto (MVP)
-    const bundle = await duckdb.selectBundle({
-      mvp: {
-        mainModule: "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-mvp.wasm",
-        workerUrl: "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-browser-mvp.worker.js"
-      }
-    });
+  const worker = new Worker(bundle.mainWorker);
+  const db = new duckdb.AsyncDuckDB(worker);
+  await db.instantiate(bundle.mainModule);
 
-    // Cria o worker
-    const worker = await duckdb.createWorker(bundle.workerUrl);
-
-    // Cria o banco assíncrono
-    const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
-
-    // Carrega o módulo WASM
-    await db.instantiate(bundle.mainModule);
-
-    const conn = await db.connect();
-    window.__duck = { conn };
-
-    console.log("✅ DuckDB + Arrow inicializados corretamente!");
-    return conn;
-
-
-  } catch (err) {
-    console.error("❌ Falha ao inicializar:", err);
-    alert("Falha ao inicializar processamento. Execute via ABRIR_QUALIFICACAO.bat.");
-  }
-})();
+  // Expor globalmente para o restante do app
+  window.db = db;
+  console.log("✅ DuckDB inicializado com sucesso!");
 </script>
+
 
 
 
