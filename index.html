@@ -346,7 +346,9 @@
                             filter: function(legendItem, chartData) {
                                 const label = legendItem.text;
                                 // Mostra apenas limites e S EXT (quando existir)
-                                return label.includes('Limite') || label.startsWith('S EXT:');
+                                return label.includes('Limite') || (label.includes('S EXT') || label.includes('SEXT'));
+                                }
+
                             }
                         } 
                     }
