@@ -344,10 +344,18 @@
                             font: fontConfig, 
                             color: '#000000',
                             filter: function(legendItem, chartData) {
-                                const label = legendItem.text;
-                                // Mostra apenas limites e S EXT (quando existir)
-                                return label.includes('Limite') || (label.includes('S EXT') || label.includes('SEXT'));
-                                }
+    const label = legendItem.text;
+    // Mostra apenas limites e sensor externo
+    if (label.includes('Limite Inferior') || label.includes('Limite Superior')) {
+        return true;
+    }
+    // Verifica se é o sensor externo (S EXT, SEXT ou qualquer variação)
+    if (label.match(/S\s*EXT/i) || label.startsWith('SEXT')) {
+        return true;
+    }
+    return false;
+}
+
 
                             }
                         } 
