@@ -320,42 +320,59 @@
         if (chartTemp) chartTemp.destroy();
         if (chartHumid) chartHumid.destroy();
         const createChart = (canvasId, datasets, yAxisID, yAxisLabel, title) => {
-            const chartContainer = document.getElementById(canvasId).parentElement;
-            const hasSensorData = datasets.some(ds => ds.label && ds.label.startsWith('S') && !ds.label.includes('Limite'));
-            chartContainer.style.display = hasSensorData ? 'block' : 'none';
-            if (hasSensorData) {
-                const canvas = chartContainer.querySelector('canvas');
-                if (!canvas) return null;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return null;
-                
-                return new Chart(ctx, {
-                    type: 'line',
-                    data: { labels: filteredLabels, datasets: datasets },
-                    options: {
-                        responsive: true, 
-                        maintainAspectRatio: false,
-                        plugins: { 
-                            title: { display: true, text: title, font: { size: 38, weight: 'bold' }, color: '#000000' }, 
-                            legend: { display: true, position: 'top', labels: { font: fontConfig, color: '#000000' } }
-                        },
-                        scales: { 
-                            [yAxisID]: { 
-                                ...axisConfig, 
-                                type: 'linear', 
-                                position: 'left', 
-                                title: { ...axisConfig.title, text: yAxisLabel } 
-                            }, 
-                            x: { 
-                                ...axisConfig, 
-                                title: { ...axisConfig.title, text: 'Data/Hora' } 
-                            } 
-                        }
+    const chartContainer = document.getElementById(canvasId).parentElement;
+    const hasSensorData = datasets.some(ds => ds.label && ds.label.startsWith('S') && !ds.label.includes('Limite'));
+    chartContainer.style.display = hasSensorData ? 'block' : 'none';
+    if (hasSensorData) {
+        const canvas = chartContainer.querySelector('canvas');
+        if (!canvas) return null;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        
+        return new Chart(ctx, {
+            type: 'line',
+            data: { labels: filteredLabels, datasets: datasets },
+            options: {
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { 
+                    title: { display: true, text: title, font: { size: 38, weight: 'bold' }, color: '#000000' }, 
+                    legend: { 
+                        display: true, 
+                        position: 'top', 
+                        labels: { 
+                            font: fontConfig, 
+                            color: '#000000',
+                            filter: function(legendItem, chartData) {
+                                const label = legendItem.text;
+                                // Mostra apenas limites e S EXT (quando existir)
+                                return label.includes('Limite') || (label.includes('S EXT') || label.includes('SEXT'));
+                            }
+                        } 
                     }
-                });
+                },
+                scales: { 
+                    [yAxisID]: { 
+                        ...axisConfig, 
+                        type: 'linear', 
+                        position: 'left', 
+                        title: { ...axisConfig.title, text: yAxisLabel } 
+                    }, 
+                    x: { 
+                        ...axisConfig, 
+                        title: { ...axisConfig.title, text: 'Data/Hora' } 
+                    } 
+                }
             }
-            return null;
-        };
+        });
+    }
+    return null;
+};
+
+
+
+
+        
         chartTemp = createChart('myChartTemp', datasetsTemp, 'yTemp', 'Temperatura (°C)', 'Gráfico de Temperatura');
         chartHumid = createChart('myChartHumid', datasetsHumid, 'yHumid', 'Umidade (%)', 'Gráfico de Umidade');
         generateTables(LI_temp, LS_temp, LI_humid, LS_humid);
